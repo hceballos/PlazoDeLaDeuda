@@ -1,0 +1,7 @@
+.DS_Store
+database.db
+plazoDeLaDeuda.xlsx
+CarteraFinancieraContable/*.xls
+CarteraFinancieraPresupuestaria/Cartera*
+CarteraFinancieraPresupuestaria/servicioDeLaDeuda.xlsx
+.gitignore
