@@ -4,7 +4,7 @@ import glob
 import sqlite3
 import numpy as np
 from datetime import datetime
-
+from datetime import date
 
 class Database():
 
@@ -14,6 +14,7 @@ class Database():
 
 	def parseCarteraFinancieraContable(self):
 		contable = pd.DataFrame()
+		# Cartera Financiera Contable: cuentas 21522, 21529, 21534
 		for f in glob.glob('CarteraFinancieraContable/*.xls', recursive=True):
 			df = pd.read_excel(f) 
 			df = df.drop(df.index[range(10)])
@@ -35,14 +36,19 @@ class Database():
 		del contable['Saldo Acumulado']
 		del contable['Tipo Documento']
 		del contable['Cuenta Contable']
+		del contable['Debe']
+		del contable['Haber']
+		del contable['Número']
+		del contable['Rut']
 
-		contable = contable.reindex(['id','Saldo','Fecha','Debe','Haber','Número','Rut','cuenta'], axis=1)
+		contable = contable.reindex(['id','Saldo','Fecha','cuenta'], axis=1)
 
 		self.parseCarteraFinancieraPresupuestaria(contable)
 
 	def parseCarteraFinancieraPresupuestaria(self, 
 		contable):
 		presupuesto = pd.DataFrame()
+		# Cartera Financiera Presupuestaria: cuentas 22, 29, 34
 		for f in glob.glob('CarteraFinancieraPresupuestaria/Cartera*', recursive=True):
 			df = pd.read_excel(f, converters={ 'Número Documento': str }, engine='openpyxl' )
 			df = df.drop(df.index[range(10)])
@@ -51,6 +57,8 @@ class Database():
 
 		presupuesto['Tipo Vista']	= presupuesto.drop( presupuesto[ presupuesto['Tipo Vista'] == 'Saldo Inicial' ].index , inplace=True )
 		presupuesto['Fecha Generación']		= pd.to_datetime(presupuesto['Fecha Generación']).dt.date
+
+		#presupuesto['Fecha Documento']		= pd.to_datetime(presupuesto['Fecha Documento']).dt.date
 		presupuesto['Fecha Documento']		= pd.to_datetime(presupuesto['Fecha Documento']).dt.date
 		presupuesto['Rut']					= presupuesto['Principal'].str.split(' ', n = 1, expand = True)[0]
 		presupuesto['id']					= presupuesto['Rut'] + presupuesto['Número Documento']
@@ -62,10 +70,13 @@ class Database():
 		del presupuesto['Folio']
 		del presupuesto['Tipo Vista']
 		del presupuesto['Título']
-		del presupuesto['Fecha Documento']
+		del presupuesto['Fecha Generación']
+		del presupuesto['Concepto']
+		del presupuesto['Número Documento']
+		del presupuesto['Rut']
 
 
-		presupuesto = presupuesto.reindex(['id','Concepto','Fecha Generación','Número Documento','Rut'], axis=1)
+		presupuesto = presupuesto.reindex(['id','Fecha Documento'], axis=1)
 
 		self.parseServicioDeLaDeuda(contable, presupuesto)
 
@@ -91,14 +102,18 @@ class Database():
 		del servicioDeLaDeuda['Tipo Vista']
 		del servicioDeLaDeuda['Título']
 		del servicioDeLaDeuda['Fecha Documento']
+		del servicioDeLaDeuda['Concepto']
+		del servicioDeLaDeuda['Número Documento']
+		del servicioDeLaDeuda['Rut']
 		
-		servicioDeLaDeuda = servicioDeLaDeuda.reindex(['id', 'Concepto', 'Fecha Generación','Número Documento','Rut'], axis=1)
+		servicioDeLaDeuda = servicioDeLaDeuda.reindex(['id', 'Fecha Generación'], axis=1)
 
-		with pd.ExcelWriter('plazoDeLaDeuda.xlsx') as writer:  
+		with pd.ExcelWriter('plazoDeLaDeuda1.xlsx') as writer:  
 			contable.to_excel(writer, sheet_name='contable')
 			presupuesto.to_excel(writer, sheet_name='presupuesto')
 			servicioDeLaDeuda.to_excel(writer, sheet_name='servicioDeLaDeuda')
 
+		"""
 		metadata = sqlalchemy.MetaData()
 		engine = sqlalchemy.create_engine('sqlite:///database.db', echo=False)
 		metadata = sqlalchemy.MetaData()
@@ -107,5 +122,5 @@ class Database():
 		contable.to_sql('contable', engine, if_exists='replace')
 		presupuesto.to_sql('presupuesto', engine, if_exists='replace')
 		servicioDeLaDeuda.to_sql('servicioDeLaDeuda', engine, if_exists='replace')
-
+		"""
 		print(">>>>>>>>>>> FIN")

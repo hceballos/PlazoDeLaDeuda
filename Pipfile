@@ -8,8 +8,9 @@ requests = "*"
 pandas = "*"
 sqlalchemy = "*"
 openpyxl = "*"
-xlrd = "*"
+xlrd = "==1.2.0"
 xlsxwriter = "*"
+jinja2 = "*"
 
 [dev-packages]
 
